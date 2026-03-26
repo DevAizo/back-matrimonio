@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 from utility.database import SessionLocal
 from models.grupo import Grupo
 from models.confirmacion import Confirmacion
+from sqlalchemy.orm import joinedload
+
+
 
 router = APIRouter(
     prefix="/invitacion",
@@ -22,31 +25,34 @@ def get_db():
 @router.get("/{codigo}")
 def obtener_invitacion(codigo: int, db: Session = Depends(get_db)):
 
-    grupo = db.query(Grupo).filter(Grupo.codigo == codigo).first()
+
+    grupo = (
+        db.query(Grupo)
+        .options(joinedload(Grupo.invitados)) 
+        .filter(Grupo.codigo == codigo)
+        .first()
+    )
 
     if not grupo:
         raise HTTPException(status_code=404, detail="Invitación no válida")
 
-    # 🔥 Buscar confirmación existente del grupo
     confirmacion = (
         db.query(Confirmacion)
         .filter(Confirmacion.grupo_id == grupo.id)
         .first()
     )
 
+
     return {
         "grupo": grupo.nombre,
-
         "invitados": [
             {
                 "id": i.id,
                 "nombre": i.nombre,
-                "confirmado": i.confirmado  # 🔥 clave para checks
+                "confirmado": i.confirmado
             }
             for i in grupo.invitados
         ],
-
-        # 🔥 si existe confirmación, la mandamos
         "confirmacion": {
             "nombre_completo": confirmacion.nombre_completo,
             "correo": confirmacion.correo,
@@ -57,7 +63,5 @@ def obtener_invitacion(codigo: int, db: Session = Depends(get_db)):
             "mensaje": confirmacion.mensaje,
             "reconfirmaciones": confirmacion.reconfirmaciones
         } if confirmacion else None,
-
-        # 🔥 extra directo (opcional pero útil)
         "reconfirmaciones": confirmacion.reconfirmaciones if confirmacion else 0
     }
