@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # 🔥 Tomar DATABASE_URL o fallback a MYSQL_URL
@@ -21,22 +21,12 @@ engine = create_engine(
     pool_size=3,
     max_overflow=5,
     pool_timeout=5,   # evita bloqueos largos
-    echo=True,        # muestra queries en logs
     connect_args={
         "connect_timeout": 5
     }
 )
 
 print("🔥 Engine creado correctamente")
-
-# 🔥 TEST REAL DE CONEXIÓN (MUY IMPORTANTE)
-try:
-    with engine.connect() as conn:
-        result = conn.execute(text("SELECT 1"))
-        print("✅ Conexión a DB exitosa:", result.scalar())
-except Exception as e:
-    print("❌ Error conectando a DB:", str(e))
-    raise
 
 SessionLocal = sessionmaker(
     autocommit=False,
