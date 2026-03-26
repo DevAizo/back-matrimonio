@@ -19,8 +19,6 @@ app = FastAPI(
     version="1.0"
 )
 
-# crear tablas si no existen
-Base.metadata.create_all(bind=engine)
 
 # CORS para conectar con el frontend
 app.add_middleware(
